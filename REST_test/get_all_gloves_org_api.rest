@@ -1,0 +1,1 @@
+GET https://bad-api-assignment.reaktor.com/v2/products/gloves
