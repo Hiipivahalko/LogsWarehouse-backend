@@ -2,6 +2,7 @@ const productRouter = require('express').Router()
 const base_url = 'https://bad-api-assignment.reaktor.com/v2'
 const axios = require('axios')
 const logger = require('../utils/logger')
+require('express-async-errors')
 
 let facemasks = []
 let gloves = []
@@ -19,7 +20,7 @@ const sort_data_by_name = (a,b) => {
 const get_from_old_api = (end_url) => {
   logger.info('fetching data from old api:', `${base_url}/${end_url}`)
   const request = axios.get(`${base_url}/${end_url}`, {
-    headers: { 'x-error-modes-active': 'all'}
+    headers: { 'x-error-modes-active': ''}
   })
   return end_url.startsWith('products') ? 
     request.then(res => res.data) :
@@ -47,21 +48,11 @@ const set_up_api = async () => {
     }
   }
 
-  /*availabilities = await all_manufactures_arr.map( async (manufacturer) => {
-    //console.log(manufacturer)
-    return await get_from_old_api(`availability/${manufacturer}`)
-  })*/
-
-  //await Promise.all(availabilities)
-  //console.log(availabilities)
-
   all_products_map = new Map()
   all_products.forEach(p => {
-    all_products_map.set(p.id, {...p, availability: 'empty'})
-    //console.log(all_products_map.get(p.id))
+    all_products_map.set(p.id.toLowerCase(), {...p, availability: 'empty'})
   })
   const re = /<INSTOCKVALUE>(.*)<\/INSTOCKVALUE>/
-  let idx = 0
   availabilities.forEach(manufacturer => {
     manufacturer.forEach(product => {
       if (all_products_map.has(product.id.toLowerCase())) {
@@ -76,38 +67,7 @@ const set_up_api = async () => {
   logger.info('end of api load')
 }
 
-
-
 set_up_api()
-
-
-/*setInterval(() => {
-    axios.get(`${base_url}/v2/products/facemasks`)
-    .then(res => {
-        if (idx % 2 === 0) facemasks = res.data
-        else facemasks = [{
-            id: "4c2e07114f3e034937d",
-            type: "facemasks",
-            name: "NYGINFOL LIGHT",
-            color: [
-            "green"
-            ],
-            price: 32,
-            manufacturer: "juuran"
-        }]
-        
-        console.log('facemasks set up')
-    }).catch(error => {
-        console.log('error', error.message)
-    })  
-    //console.log(facemasks)
-    idx++
-    console.log('idx', idx)
-
-
-}, 10000);*/
-
-
 
 
 productRouter.get(`/`, async (request, response, next) => {
